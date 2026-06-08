@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AutomatizaPyme · Tu pyme, gestionada por IA</title>
+<meta name="description" content="ERP español con IA agéntica e instalación local. Facturación, contabilidad, nóminas y cumplimiento AEAT donde hablas en castellano y agentes de IA ejecutan por ti. Tus datos viven en tu equipo." />
+<meta property="og:title" content="AutomatizaPyme · Háblale a tu empresa. Ella se gestiona." />
+<meta property="og:description" content="ERP local-first con agentes de IA que ejecutan facturación, contabilidad, nóminas y compliance AEAT. Tus datos nunca salen de tu equipo sin permiso." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070912;
+    --bg-2:#0c1130;
+    --navy:#101a4d;
+    --violet:#4c1d95;
+    --violet-2:#7c3aed;
+    --cyan:#38e1ff;
+    --cyan-soft:#7dd3fc;
+    --electron:#a78bfa;
+    --ink:#eef1ff;
+    --muted:#9aa3cf;
+    --line:rgba(167,139,250,.16);
+    --card:rgba(124,58,237,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Hanken Grotesk',sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* atmospheric background */
+  .bgwrap{position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(1100px 700px at 78% -8%, rgba(124,58,237,.34), transparent 60%),
+      radial-gradient(900px 600px at 8% 12%, rgba(56,225,255,.12), transparent 55%),
+      radial-gradient(1200px 900px at 50% 115%, rgba(76,29,149,.4), transparent 60%),
+      linear-gradient(160deg,#070912 0%,#0a0e24 45%,#120a30 100%);
+  }
+  .grid-overlay{position:fixed;inset:0;z-index:-1;opacity:.5;
+    background-image:
+      linear-gradient(rgba(167,139,250,.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(167,139,250,.05) 1px,transparent 1px);
+    background-size:64px 64px;
+    -webkit-mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 80%);
+    mask-image:radial-gradient(circle at 50% 30%,#000 0%,transparent 80%);
+  }
+  #neural{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+  .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  .wrap{max-width:1140px;margin:0 auto;padding:0 28px}
+  .mono{font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+
+  /* NAV */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:linear-gradient(to bottom,rgba(7,9,18,.85),rgba(7,9,18,.4));
+    border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;max-width:1140px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:13px;font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;letter-spacing:-.02em}
+  .brand b{background:linear-gradient(90deg,var(--cyan-soft),var(--electron));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-links{display:flex;align-items:center;gap:28px}
+  .nav-links a.navlink{font-family:'Space Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-decoration:none;transition:.22s}
+  .nav-links a.navlink:hover{color:var(--ink)}
+  .nav-cta{font-family:'Space Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:10px 18px;border-radius:999px;transition:.25s}
+  .nav-cta:hover{border-color:var(--electron);background:rgba(124,58,237,.15);transform:translateY(-1px)}
+
+  /* ATOM LOGO */
+  .atom{position:relative;width:34px;height:34px;flex:none}
+  .atom .nucleus{position:absolute;inset:0;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;
+    font-size:18px;color:#fff;text-shadow:0 0 12px rgba(124,58,237,.9)}
+  .orbit{position:absolute;inset:0;border:1.4px solid rgba(167,139,250,.55);border-radius:50%}
+  .o1{transform:rotate(0deg) scaleY(.4);animation:spin1 6s linear infinite}
+  .o2{transform:rotate(60deg) scaleY(.4);animation:spin2 7.5s linear infinite}
+  .o3{transform:rotate(-60deg) scaleY(.4);animation:spin3 9s linear infinite}
+  .e{position:absolute;top:50%;left:-2px;width:4px;height:4px;border-radius:50%;background:var(--cyan);
+     box-shadow:0 0 8px 2px rgba(56,225,255,.8);margin-top:-2px}
+  @keyframes spin1{to{transform:rotate(360deg) scaleY(.4)}}
+  @keyframes spin2{to{transform:rotate(420deg) scaleY(.4)}}
+  @keyframes spin3{to{transform:rotate(300deg) scaleY(.4)}}
+
+  /* HERO */
+  header{padding:90px 0 70px;position:relative}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:50px;align-items:center}
+  .eyebrow{color:var(--cyan-soft);display:inline-flex;align-items:center;gap:10px;margin-bottom:26px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan-soft);opacity:.6}
+  h1{font-family:'Bricolage Grotesque';font-weight:800;font-size:clamp(40px,6vw,68px);line-height:1.02;letter-spacing:-.03em;margin-bottom:24px}
+  h1 .grad{background:linear-gradient(105deg,var(--cyan) 0%,var(--electron) 55%,var(--violet-2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{font-size:19px;color:var(--muted);max-width:520px;margin-bottom:36px}
+  .lead strong{color:var(--ink);font-weight:600}
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{font-family:'Space Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:.06em;
+    text-decoration:none;padding:15px 28px;border-radius:12px;transition:.28s;display:inline-flex;align-items:center;gap:9px;cursor:pointer;border:none}
+  .btn-primary{background:linear-gradient(100deg,var(--cyan),var(--violet-2));color:#06070f;font-weight:700;
+    box-shadow:0 8px 30px rgba(124,58,237,.45)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(124,58,237,.6)}
+  .btn-ghost{border:1px solid var(--line);color:var(--ink);background:transparent}
+  .btn-ghost:hover{border-color:var(--electron);background:rgba(124,58,237,.12)}
+
+  .hero-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:34px}
+  .hero-meta div{display:flex;flex-direction:column}
+  .hero-meta .num{font-family:'Bricolage Grotesque';font-weight:800;font-size:24px;color:var(--ink);line-height:1}
+  .hero-meta .lab{font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:6px}
+
+  /* big atom hero visual */
+  .hero-visual{position:relative;display:grid;place-items:center;height:380px}
+  .bigatom{position:relative;width:300px;height:300px}
+  .bigatom .core{position:absolute;inset:0;display:grid;place-items:center;z-index:3}
+  .bigatom .core span{font-family:'Bricolage Grotesque';font-weight:800;font-size:110px;
+    background:linear-gradient(160deg,#fff,var(--electron));-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 30px rgba(124,58,237,.7))}
+  .bigatom .core::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle,rgba(124,58,237,.55),transparent 70%);filter:blur(8px);z-index:-1}
+  .borbit{position:absolute;inset:0;border:1.5px solid rgba(167,139,250,.4);border-radius:50%}
+  .bb1{transform:scaleY(.38);animation:bspin 11s linear infinite}
+  .bb2{transform:rotate(60deg) scaleY(.38);animation:bspin 9s linear infinite reverse}
+  .bb3{transform:rotate(-60deg) scaleY(.38);animation:bspin 14s linear infinite}
+  .be{position:absolute;top:50%;left:-4px;width:9px;height:9px;border-radius:50%;margin-top:-4px}
+  .be1{background:var(--cyan);box-shadow:0 0 14px 3px rgba(56,225,255,.85)}
+  .be2{background:var(--electron);box-shadow:0 0 14px 3px rgba(167,139,250,.85)}
+  .be3{background:#fff;box-shadow:0 0 14px 3px rgba(255,255,255,.7)}
+  @keyframes bspin{to{transform:rotate(360deg) scaleY(.38)}}
+  .bb2{animation-name:bspin2}@keyframes bspin2{from{transform:rotate(60deg) scaleY(.38)}to{transform:rotate(420deg) scaleY(.38)}}
+  .bb3{animation-name:bspin3}@keyframes bspin3{from{transform:rotate(-60deg) scaleY(.38)}to{transform:rotate(300deg) scaleY(.38)}}
+
+  /* trust strip */
+  .trust{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(7,9,18,.4)}
+  .trust-in{display:flex;flex-wrap:wrap;gap:14px 36px;align-items:center;justify-content:center;padding:20px 28px;max-width:1140px;margin:0 auto}
+  .trust-in span{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--muted);display:inline-flex;align-items:center;gap:8px}
+  .trust-in span::before{content:"✓";color:var(--cyan);font-weight:700}
+
+  /* DEMO / GIF showcase */
+  .demo-wrap{padding:70px 0 20px}
+  .demo-frame{max-width:1000px;margin:34px auto 0;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    background:rgba(7,9,18,.6);box-shadow:0 30px 80px rgba(124,58,237,.28);position:relative}
+  .demo-frame::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet-2));z-index:2}
+  .demo-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line);background:rgba(16,26,77,.35)}
+  .demo-bar .dot{width:11px;height:11px;border-radius:50%}
+  .demo-bar .dot.r{background:#ff5f57}.demo-bar .dot.y{background:#febc2e}.demo-bar .dot.g{background:#28c840}
+  .demo-bar .addr{margin-left:14px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);
+    background:rgba(7,9,18,.6);border:1px solid var(--line);border-radius:7px;padding:5px 14px}
+  .demo-frame img{display:block;width:100%;height:auto}
+  .demo-cap{text-align:center;color:var(--muted);font-size:13.5px;margin-top:18px}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(28px);transition:.9s cubic-bezier(.16,1,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  section{padding:78px 0;position:relative}
+  .sec-label{color:var(--electron);margin-bottom:18px}
+  h2{font-family:'Bricolage Grotesque';font-weight:800;font-size:clamp(28px,4vw,42px);letter-spacing:-.02em;line-height:1.08;margin-bottom:18px}
+  .sec-intro{color:var(--muted);max-width:580px;font-size:17px;margin-bottom:48px}
+
+  /* differentiators */
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .dcard{border:1px solid var(--line);border-radius:18px;padding:30px 26px;background:var(--card);position:relative;overflow:hidden;transition:.3s}
+  .dcard::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet-2))}
+  .dcard:hover{transform:translateY(-5px);border-color:rgba(167,139,250,.4);background:rgba(124,58,237,.1)}
+  .dnum{font-family:'Space Mono',monospace;color:var(--cyan-soft);font-size:13px;margin-bottom:18px}
+  .dcard h3{font-family:'Bricolage Grotesque';font-weight:600;font-size:21px;margin-bottom:11px;letter-spacing:-.01em}
+  .dcard p{color:var(--muted);font-size:15px}
+
+  /* HOW IT WORKS — steps */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;counter-reset:step}
+  .step{position:relative;border:1px solid var(--line);border-radius:18px;padding:28px 24px;background:rgba(16,26,77,.22);transition:.3s}
+  .step:hover{border-color:rgba(56,225,255,.35);background:rgba(56,225,255,.05);transform:translateY(-4px)}
+  .step .sn{font-family:'Space Mono',monospace;font-size:13px;color:#06070f;font-weight:700;width:34px;height:34px;border-radius:10px;
+    display:grid;place-items:center;background:linear-gradient(120deg,var(--cyan),var(--electron));margin-bottom:18px}
+  .step h4{font-family:'Bricolage Grotesque';font-weight:600;font-size:18px;margin-bottom:8px;letter-spacing:-.01em}
+  .step p{color:var(--muted);font-size:14px}
+  .step-arrow{position:absolute;right:-13px;top:44px;color:var(--electron);font-size:18px;z-index:2}
+
+  /* capability grid */
+  .caps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .cap{border:1px solid var(--line);border-radius:14px;padding:22px 20px;background:rgba(16,26,77,.25);transition:.25s}
+  .cap:hover{background:rgba(56,225,255,.07);border-color:rgba(56,225,255,.3)}
+  .cap .tick{font-family:'Space Mono',monospace;color:var(--cyan);font-size:12px;margin-bottom:9px}
+  .cap h4{font-weight:600;font-size:16px;margin-bottom:4px}
+  .cap p{color:var(--muted);font-size:13px}
+
+  /* talk band */
+  .band{border:1px solid var(--line);border-radius:24px;padding:54px 48px;
+    background:linear-gradient(135deg,rgba(76,29,149,.3),rgba(16,26,77,.2));position:relative;overflow:hidden}
+  .band::after{content:"";position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;
+    background:radial-gradient(circle,rgba(124,58,237,.4),transparent 70%);filter:blur(20px)}
+  .band-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;position:relative;z-index:2}
+  .prompt{font-family:'Space Mono',monospace;font-size:15px;background:rgba(7,9,18,.6);border:1px solid var(--line);
+    border-radius:12px;padding:18px 20px;margin-bottom:14px;color:var(--cyan-soft)}
+  .prompt .you{color:var(--muted);display:block;font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}
+  .resp{font-size:14px;color:var(--muted);padding-left:4px;border-left:2px solid var(--violet-2);padding:4px 0 4px 16px}
+
+  /* SECURITY */
+  .sec-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:46px;align-items:start}
+  .sec-list{display:flex;flex-direction:column;gap:18px}
+  .sec-item{display:flex;gap:16px;align-items:flex-start}
+  .sec-ico{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:19px;
+    background:rgba(124,58,237,.14);border:1px solid var(--line)}
+  .sec-item h4{font-family:'Bricolage Grotesque';font-weight:600;font-size:17px;margin-bottom:4px}
+  .sec-item p{color:var(--muted);font-size:14px}
+  .diagram{border:1px solid var(--line);border-radius:20px;padding:30px;background:rgba(7,9,18,.5);position:relative;overflow:hidden}
+  .diagram::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet-2))}
+  .dgnode{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:rgba(16,26,77,.3);margin-bottom:12px}
+  .dgnode .t{font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--cyan-soft);margin-bottom:6px}
+  .dgnode .d{font-size:13.5px;color:var(--muted)}
+  .dgnode.local{border-color:rgba(56,225,255,.4);background:rgba(56,225,255,.06)}
+  .dgflow{text-align:center;color:var(--electron);font-family:'Space Mono',monospace;font-size:11px;margin:4px 0;letter-spacing:.05em}
+  .badges{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}
+  .badge{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.04em;padding:7px 13px;border-radius:999px;
+    border:1px solid var(--line);color:var(--cyan-soft);background:rgba(124,58,237,.08)}
+
+  /* PRICING */
+  .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+  .pcard{border:1px solid var(--line);border-radius:20px;padding:34px 28px;background:var(--card);position:relative;display:flex;flex-direction:column;transition:.3s}
+  .pcard:hover{transform:translateY(-5px);border-color:rgba(167,139,250,.4)}
+  .pcard.featured{border-color:rgba(56,225,255,.45);background:linear-gradient(160deg,rgba(124,58,237,.16),rgba(16,26,77,.25));box-shadow:0 16px 50px rgba(124,58,237,.28)}
+  .ptag{position:absolute;top:-12px;left:28px;font-family:'Space Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;
+    padding:5px 12px;border-radius:999px;background:linear-gradient(100deg,var(--cyan),var(--violet-2));color:#06070f;font-weight:700}
+  .pname{font-family:'Bricolage Grotesque';font-weight:800;font-size:22px;margin-bottom:6px}
+  .pdesc{color:var(--muted);font-size:13.5px;min-height:40px;margin-bottom:18px}
+  .pprice{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+  .pprice .amt{font-family:'Bricolage Grotesque';font-weight:800;font-size:44px;line-height:1}
+  .pprice .per{color:var(--muted);font-size:14px}
+  .pnote{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:22px;letter-spacing:.03em}
+  .pfeat{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:26px;flex:1}
+  .pfeat li{font-size:14px;color:var(--ink);display:flex;gap:10px;align-items:flex-start}
+  .pfeat li::before{content:"✓";color:var(--cyan);font-weight:700;flex:none}
+  .pfeat li.muted{color:var(--muted)}
+  .pfeat li.muted::before{content:"+";color:var(--electron)}
+  .pcard .btn{justify-content:center;width:100%}
+  .price-foot{text-align:center;color:var(--muted);font-size:13.5px;margin-top:30px}
+  .price-foot strong{color:var(--ink)}
+
+  /* FORM */
+  .signup{border:1px solid var(--line);border-radius:24px;overflow:hidden;
+    background:linear-gradient(135deg,rgba(76,29,149,.3),rgba(16,26,77,.22));position:relative}
+  .signup::after{content:"";position:absolute;left:-70px;bottom:-70px;width:300px;height:300px;border-radius:50%;
+    background:radial-gradient(circle,rgba(56,225,255,.25),transparent 70%);filter:blur(20px)}
+  .signup-grid{display:grid;grid-template-columns:1fr 1fr;position:relative;z-index:2}
+  .signup-copy{padding:48px 44px;border-right:1px solid var(--line)}
+  .signup-copy h2{font-size:clamp(26px,3.4vw,36px)}
+  .signup-copy p{color:var(--muted);font-size:16px;margin-bottom:24px}
+  .signup-copy ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+  .signup-copy li{font-size:14px;color:var(--ink);display:flex;gap:10px;align-items:flex-start}
+  .signup-copy li::before{content:"→";color:var(--cyan);font-weight:700;flex:none}
+  .form{padding:48px 44px;display:flex;flex-direction:column;gap:16px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field label{font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--cyan-soft)}
+  .field input,.field select,.field textarea{font-family:'Hanken Grotesk',sans-serif;font-size:15px;color:var(--ink);
+    background:rgba(7,9,18,.55);border:1px solid var(--line);border-radius:11px;padding:13px 15px;transition:.2s;width:100%}
+  .field textarea{resize:vertical;min-height:74px}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--electron);background:rgba(7,9,18,.75);box-shadow:0 0 0 3px rgba(124,58,237,.18)}
+  .field select option{background:#0c1130;color:var(--ink)}
+  .form .btn{justify-content:center;margin-top:6px}
+  .form-note{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);text-align:center;letter-spacing:.02em;line-height:1.6}
+  .form-ok{display:none;text-align:center;padding:20px;border:1px solid rgba(56,225,255,.4);border-radius:12px;background:rgba(56,225,255,.07);color:var(--cyan-soft);font-size:14.5px}
+  .form-ok.show{display:block}
+
+  /* FINAL */
+  .final{text-align:center;padding:96px 0}
+  .final h2{font-size:clamp(32px,5vw,52px);margin-bottom:20px}
+  .final p{color:var(--muted);font-size:18px;max-width:540px;margin:0 auto 38px}
+
+  footer{border-top:1px solid var(--line);padding:44px 0;color:var(--muted);font-size:13px}
+  .foot-in{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:24px}
+  .foot-note{font-family:'Space Mono',monospace;font-size:11px;opacity:.7;max-width:520px;line-height:1.7}
+  .foot-links{display:flex;gap:20px;flex-wrap:wrap}
+  .foot-links a{color:var(--muted);text-decoration:none;transition:.2s}
+  .foot-links a:hover{color:var(--ink)}
+
+  @media(max-width:980px){
+    .nav-links a.navlink{display:none}
+    .steps{grid-template-columns:1fr 1fr}
+    .step-arrow{display:none}
+    .sec-grid{grid-template-columns:1fr;gap:34px}
+    .signup-grid{grid-template-columns:1fr}
+    .signup-copy{border-right:none;border-bottom:1px solid var(--line)}
+  }
+  @media(max-width:880px){
+    .hero-grid{grid-template-columns:1fr;gap:20px}
+    .hero-visual{height:300px;order:-1}
+    .bigatom{width:230px;height:230px}.bigatom .core span{font-size:84px}
+    .three{grid-template-columns:1fr}
+    .caps{grid-template-columns:1fr 1fr}
+    .band-grid{grid-template-columns:1fr}
+    .band{padding:36px 26px}
+    .price-grid{grid-template-columns:1fr}
+    .pcard.featured{order:-1}
+  }
+  @media(max-width:480px){
+    .caps{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr}
+    .signup-copy,.form{padding:32px 24px}
+  }
+</style>
+</head>
+<body>
+<div class="bgwrap"></div>
+<canvas id="neural" aria-hidden="true"></canvas>
+<div class="grid-overlay"></div>
+<div class="grain"></div>
+
+<nav>
+  <div class="nav-in">
+    <div class="brand">
+      <div class="atom">
+        <div class="orbit o1"><span class="e"></span></div>
+        <div class="orbit o2"><span class="e" style="background:var(--electron);box-shadow:0 0 8px 2px rgba(167,139,250,.8)"></span></div>
+        <div class="orbit o3"><span class="e" style="background:#fff;box-shadow:0 0 8px 2px rgba(255,255,255,.7)"></span></div>
+        <div class="nucleus">A</div>
+      </div>
+      Automatiza<b>Pyme</b>
+    </div>
+    <div class="nav-links">
+      <a class="navlink" href="#demo">Demo</a>
+      <a class="navlink" href="#como">Cómo funciona</a>
+      <a class="navlink" href="#capacidades">Capacidades</a>
+      <a class="navlink" href="#seguridad">Seguridad</a>
+      <a class="navlink" href="#precios">Precios</a>
+      <a class="nav-cta" href="#contacto">Solicitar acceso</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="reveal in">
+        <span class="eyebrow mono">ERP · IA agéntica · Local-first</span>
+        <h1>Háblale a tu empresa.<br /><span class="grad">Ella se gestiona.</span></h1>
+        <p class="lead">Facturación, contabilidad, nóminas y cumplimiento AEAT en una sola aplicación que se instala en tu ordenador. Por encima, <strong>agentes de IA que entienden castellano</strong> y ejecutan las operaciones por ti — no solo responden, escriben en tu base de datos.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#contacto">Solicitar acceso anticipado →</a>
+          <a class="btn btn-ghost" href="#como">Ver cómo funciona</a>
+        </div>
+        <div class="hero-meta">
+          <div><span class="num">13</span><span class="lab">Agentes IA</span></div>
+          <div><span class="num">45+</span><span class="lab">Capacidades</span></div>
+          <div><span class="num">100%</span><span class="lab">Datos locales</span></div>
+          <div><span class="num">Verifactu</span><span class="lab">Nativo</span></div>
+        </div>
+      </div>
+      <div class="hero-visual reveal in">
+        <div class="bigatom">
+          <div class="borbit bb1"><span class="be be1"></span></div>
+          <div class="borbit bb2"><span class="be be2"></span></div>
+          <div class="borbit bb3"><span class="be be3"></span></div>
+          <div class="core"><span>A</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="trust">
+  <div class="trust-in">
+    <span>Tu base de datos vive en tu equipo</span>
+    <span>Verifactu con cadena de hash</span>
+    <span>Cumple AI Act y RGPD</span>
+    <span>Instalación sin Docker ni Postgres</span>
+    <span>Trae tu propia clave de IA</span>
+    <span>Trial 14 días sin tarjeta</span>
+  </div>
+</div>
+
+<section class="demo-wrap" id="demo">
+  <div class="wrap">
+    <span class="sec-label mono reveal" style="display:block;text-align:center">La app en acción</span>
+    <h2 class="reveal" style="text-align:center">Un día normal, en 20 segundos.</h2>
+    <p class="sec-intro reveal" style="margin:0 auto;text-align:center">Le preguntas en castellano, la IA ejecuta contra tus datos y tú lo revisas. Sin formación, sin pegar siete herramientas.</p>
+    <div class="demo-frame reveal">
+      <div class="demo-bar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="addr">app.automatizapyme.com</span>
+      </div>
+      <img src="automatizapyme-demo.gif" alt="Demostración de AutomatizaPyme: el asistente IA responde con datos reales, lista de facturas y equipo de 16 agentes IA" loading="lazy" />
+    </div>
+    <p class="demo-cap reveal">Grabación real de la aplicación · datos de demostración</p>
+  </div>
+</section>
+
+<section id="diferencias">
+  <div class="wrap">
+    <span class="sec-label mono reveal">Por qué es distinto</span>
+    <h2 class="reveal">No es otro software en la nube.</h2>
+    <p class="sec-intro reveal">Tres decisiones de fondo que ningún SaaS de gestión te ofrece a la vez.</p>
+    <div class="three">
+      <div class="dcard reveal">
+        <div class="dnum">01</div>
+        <h3>Tus datos, en tu máquina</h3>
+        <p>La base de datos vive en tu propio ordenador, en PostgreSQL local. No hay servidor central con tus facturas y nóminas que pueda sufrir una brecha masiva — porque ese servidor no existe.</p>
+      </div>
+      <div class="dcard reveal">
+        <div class="dnum">02</div>
+        <h3>La IA ejecuta, no solo conversa</h3>
+        <p>«Hazme la nómina de Juan de mayo» y la deja preparada para que la apruebes. «Concilia abril» y empareja los movimientos con razones explicables. Un becario digital que opera tu ERP.</p>
+      </div>
+      <div class="dcard reveal">
+        <div class="dnum">03</div>
+        <h3>Cumplimiento de fábrica</h3>
+        <p>Verifactu con cadena de hash, modelos 303 / 130 / 111 / 190 / 347 / 390, nóminas con IRPF y Seguridad Social calculados. Cosido desde el primer día, no como módulo aparte.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="como">
+  <div class="wrap">
+    <span class="sec-label mono reveal">Cómo funciona</span>
+    <h2 class="reveal">De la frase a la operación hecha, en cuatro pasos.</h2>
+    <p class="sec-intro reveal">Sin curva de aprendizaje de ERP. Lo instalas, le hablas y tú mantienes siempre el control.</p>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="sn">1</div>
+        <h4>Instalas y pones tu clave</h4>
+        <p>Un único .exe con PostgreSQL y Python embebidos: ni Docker ni servidores. Pegas tu clave de IA (Anthropic, OpenAI…) y listo. Tus datos nacen y se quedan en local.</p>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step reveal">
+        <div class="sn">2</div>
+        <h4>Le hablas en castellano</h4>
+        <p>«Factura 1.200 € a Talleres López», «¿llego a las nóminas este mes?», «presenta el 303». Escribes como se lo dirías a un compañero.</p>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step reveal">
+        <div class="sn">3</div>
+        <h4>La IA ejecuta</h4>
+        <p>El agente del dominio correcto localiza los datos, hace los cálculos y escribe en tu base de datos. No es un chat: realiza la acción real.</p>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step reveal">
+        <div class="sn">4</div>
+        <h4>Tú apruebas</h4>
+        <p>Decides qué se ejecuta solo y qué pasa por tu visto bueno. Todo queda en un feed de actividad con trazabilidad y registro inmutable.</p>
+      </div>
+    </div>
+    <p class="price-foot reveal" style="margin-top:34px">Modelo <strong>«trae tu clave» (BYOK)</strong>: la IA funciona con tu propia clave del proveedor que elijas y pagas tu consumo directamente a él — normalmente unos pocos euros al mes. Nosotros no intermediamos tus datos ni tu factura de IA.</p>
+  </div>
+</section>
+
+<section id="capacidades">
+  <div class="wrap">
+    <span class="sec-label mono reveal">Todo en una app</span>
+    <h2 class="reveal">El ERP completo, sin pegar siete herramientas.</h2>
+    <p class="sec-intro reveal">Lo que hoy vive repartido en facturación, hojas de Excel, programa de nóminas y el portal del banco — reunido en un solo sitio.</p>
+    <div class="caps">
+      <div class="cap reveal"><div class="tick">✦</div><h4>Facturación electrónica</h4><p>Series, recurrentes, presupuesto→factura, QR Verifactu</p></div>
+      <div class="cap reveal"><div class="tick">✦</div><h4>Contabilidad española</h4><p>Libro diario, P&G, balance, cuadro de cuentas</p></div>
+      <div class="cap reveal"><div class="tick">✦</div><h4>Banca y conciliación</h4><p>Movimientos, saldos, conciliación explicable</p></div>
+      <div class="cap reveal"><div class="tick">✦</div><h4>RRHH y nóminas</h4><p>Empleados, contratos, nóminas con IRPF + SS</p></div>
+      <div class="cap reveal"><div class="tick">✦</div><h4>Compras y proveedores</h4><p>Pedidos, facturas de compra, recepción de stock</p></div>
+      <div class="cap reveal"><div class="tick">✦</div><h4>Tesorería y cashflow</h4><p>Proyección de liquidez con alertas tempranas</p></div>
+      <div class="cap reveal"><div class="tick">✦</div><h4>CRM y ventas</h4><p>Oportunidades, pipeline, portal de clientes</p></div>
+      <div class="cap reveal"><div class="tick">✦</div><h4>Compliance AEAT</h4><p>Calendario fiscal, modelos y presentación asistida</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="band reveal">
+      <div class="band-grid">
+        <div>
+          <span class="sec-label mono">Tu equipo de IA</span>
+          <h2 style="font-size:32px">13 agentes especializados. Y los que tú crees.</h2>
+          <p style="color:var(--muted);font-size:16px">Cada dominio del negocio tiene su experto: facturación, contabilidad, RRHH, banca, fiscal… Y puedes «contratar» empleados IA propios, con su nombre, su rol y sus permisos. Tú decides qué puede ejecutar solo y qué necesita tu visto bueno.</p>
+        </div>
+        <div>
+          <div class="prompt"><span class="you">Tú escribes</span>Manda recordatorio a los clientes con facturas vencidas</div>
+          <div class="resp">→ El agente de facturación localiza las vencidas, redacta y envía. Tú lo ves en el feed de actividad.</div>
+          <div class="prompt" style="margin-top:18px"><span class="you">Tú escribes</span>¿Tengo liquidez para las nóminas de este mes?</div>
+          <div class="resp">→ Cruza saldo, cobros y pagos previstos y te responde con certeza, no con un «creo que sí».</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="seguridad">
+  <div class="wrap">
+    <span class="sec-label mono reveal">Seguridad y cumplimiento</span>
+    <h2 class="reveal">Privacidad que no tienes que creerte: se verifica.</h2>
+    <p class="sec-intro reveal">El moat no es una promesa de marketing. Tus datos de negocio no salen de tu equipo salvo que tú lo autorices explícitamente.</p>
+    <div class="sec-grid">
+      <div class="sec-list reveal">
+        <div class="sec-item">
+          <div class="sec-ico">🔒</div>
+          <div><h4>Datos en reposo, 100% locales</h4><p>Facturas, NIFs, IBANs, nóminas y documentos viven en tu PostgreSQL local. Una brecha masiva de servidor central es imposible: ese servidor no existe.</p></div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-ico">🧾</div>
+          <div><h4>Verifactu nativo</h4><p>Cadena de hash, QR y registro WORM inmutable por empresa. Listo para la obligación de sociedades (ene-2027) y autónomos (jul-2027).</p></div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-ico">⚖️</div>
+          <div><h4>Conforme al AI Act</h4><p>Human-in-the-loop documentado, banner de transparencia (Art. 50) y trazabilidad de proveedor, modelo y tokens en cada respuesta del agente.</p></div>
+        </div>
+        <div class="sec-item">
+          <div class="sec-ico">🛡️</div>
+          <div><h4>RGPD y control de IA</h4><p>Cifrado de credenciales, audit log inmutable, rate limiting y guardas anti-inyección de prompts. La inferencia corre bajo el DPA del proveedor LLM que tú elijas.</p></div>
+        </div>
+      </div>
+      <div class="diagram reveal">
+        <div class="dgnode local">
+          <div class="t">Tu equipo · local</div>
+          <div class="d">App de escritorio · PostgreSQL portable · tu ERP y todos tus datos de negocio.</div>
+        </div>
+        <div class="dgflow">▲ ▼ HTTPS — solo valida licencia</div>
+        <div class="dgnode">
+          <div class="t">VPS de licencias</div>
+          <div class="d">Comprueba tu licencia. Nunca accede a tus datos de ERP.</div>
+        </div>
+        <div class="dgflow">▼ HTTPS — solo en llamadas LLM (opcional)</div>
+        <div class="dgnode">
+          <div class="t">API LLM que tú configures</div>
+          <div class="d">Anthropic · Gemini · OpenAI… bajo su acuerdo de tratamiento de datos.</div>
+        </div>
+        <div class="badges">
+          <span class="badge">Local-first</span>
+          <span class="badge">Audit WORM</span>
+          <span class="badge">JWT + refresh</span>
+          <span class="badge">CSP + headers</span>
+          <span class="badge">Multi-tenant</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="precios">
+  <div class="wrap">
+    <span class="sec-label mono reveal">Precios</span>
+    <h2 class="reveal">Un plan por cada tamaño de negocio.</h2>
+    <p class="sec-intro reveal">14 días de prueba sin tarjeta. Plan anual con descuento equivalente a dos meses. Precios sin IVA.</p>
+    <div class="price-grid">
+      <div class="pcard reveal">
+        <div class="pname">Solo</div>
+        <div class="pdesc">Para autónomos y micropymes que solo necesitan facturar bien y cumplir.</div>
+        <div class="pprice"><span class="amt">39€</span><span class="per">/ mes</span></div>
+        <div class="pnote">+ IVA · 1 empresa</div>
+        <ul class="pfeat">
+          <li>Facturación electrónica completa</li>
+          <li>Verifactu nativo (hash + QR)</li>
+          <li>Presupuestos y facturas recurrentes</li>
+          <li>1 empresa</li>
+          <li>Soporte best effort</li>
+        </ul>
+        <a class="btn btn-ghost" href="#contacto">Empezar prueba</a>
+      </div>
+      <div class="pcard featured reveal">
+        <div class="ptag">Más elegido</div>
+        <div class="pname">Pro</div>
+        <div class="pdesc">El paquete completo para la pyme que quiere su propio equipo de IA.</div>
+        <div class="pprice"><span class="amt">65€</span><span class="per">/ mes</span></div>
+        <div class="pnote">+ IVA · IA con tu propia clave (BYOK)</div>
+        <ul class="pfeat">
+          <li>Todo lo de Solo</li>
+          <li class="muted">Banca y conciliación</li>
+          <li class="muted">Contabilidad española completa</li>
+          <li class="muted">IA de marketing y RRHH</li>
+          <li class="muted">Empleados IA personalizables</li>
+          <li>Soporte L1 en 48 h hábiles</li>
+        </ul>
+        <a class="btn btn-primary" href="#contacto">Empezar prueba</a>
+      </div>
+      <div class="pcard reveal">
+        <div class="pname">Gestoría</div>
+        <div class="pdesc">Para asesorías que llevan la gestión de varias pymes a la vez.</div>
+        <div class="pprice"><span class="amt">159€</span><span class="per">/ mes</span></div>
+        <div class="pnote">+ IVA · hasta 25 empresas</div>
+        <ul class="pfeat">
+          <li>Todo lo de Pro</li>
+          <li class="muted">Multi-empresa hasta 25</li>
+          <li class="muted">Presentación telemática AEAT</li>
+          <li class="muted">Canal directo con el fundador</li>
+          <li>Soporte L1 en 4 h hábiles</li>
+        </ul>
+        <a class="btn btn-ghost" href="#contacto">Hablar con ventas</a>
+      </div>
+    </div>
+    <p class="price-foot reveal">Estos precios son <strong>solo del software</strong>. La IA usa tu propia clave (BYOK) y su consumo lo pagas directamente a tu proveedor — sin recargos ni sorpresas por nuestra parte.<br />¿Asesoría con más de 25 empresas o requisitos de inferencia 100% local? <strong>Tenemos plan a medida</strong> — escríbenos abajo.</p>
+  </div>
+</section>
+
+<section id="contacto" style="padding-bottom:40px">
+  <div class="wrap">
+    <div class="signup reveal">
+      <div class="signup-grid">
+        <div class="signup-copy">
+          <span class="sec-label mono">Acceso anticipado</span>
+          <h2>Pruébalo con tus datos.</h2>
+          <p>AutomatizaPyme está en fase de acceso anticipado. Si llevas la gestión de varias pymes o la tuya propia, entra en la lista y coordinamos una prueba real.</p>
+          <ul>
+            <li>Onboarding guiado, sin compromiso</li>
+            <li>Tus datos nunca salen de tu equipo</li>
+            <li>Plazas limitadas por cohorte</li>
+          </ul>
+        </div>
+        <form class="form" id="waitlist" novalidate>
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" name="nombre" type="text" placeholder="Tu nombre" required />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="tu@empresa.com" required />
+          </div>
+          <div class="field">
+            <label for="empresas">¿Cuántas empresas gestionas?</label>
+            <select id="empresas" name="empresas">
+              <option value="1 empresa (la mía)">1 empresa (la mía)</option>
+              <option value="2–5 empresas">2–5 empresas</option>
+              <option value="6–25 empresas">6–25 empresas</option>
+              <option value="Más de 25 (gestoría)">Más de 25 (gestoría)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="mensaje">¿Algo que contarnos? (opcional)</label>
+            <textarea id="mensaje" name="mensaje" placeholder="Qué usas hoy, qué te gustaría automatizar…"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Solicitar acceso anticipado →</button>
+          <p class="form-note">Al enviar se abrirá tu correo con los datos listos. No compartimos tu información con terceros. · marcosreciosanchez@gmail.com</p>
+          <div class="form-ok" id="formOk">✓ ¡Gracias! Se ha abierto tu correo. Si no aparece, escríbenos a marcosreciosanchez@gmail.com</div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2 class="reveal">Tu empresa, gestionada por IA. En tu equipo.</h2>
+    <p class="reveal">Deja de pegar siete herramientas. Háblale a una sola y deja que ejecute — con tus datos siempre bajo tu control.</p>
+    <div class="cta-row reveal" style="justify-content:center">
+      <a class="btn btn-primary" href="#contacto">Solicitar acceso anticipado →</a>
+      <a class="btn btn-ghost" href="#precios">Ver precios</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>
+      <div class="brand" style="font-size:16px">
+        <div class="atom" style="width:26px;height:26px">
+          <div class="orbit o1"><span class="e"></span></div>
+          <div class="orbit o2"><span class="e" style="background:var(--electron)"></span></div>
+          <div class="nucleus" style="font-size:14px">A</div>
+        </div>
+        Automatiza<b>Pyme</b>
+      </div>
+      <div class="foot-links" style="margin-top:16px">
+        <a href="#como">Cómo funciona</a>
+        <a href="#capacidades">Capacidades</a>
+        <a href="#seguridad">Seguridad</a>
+        <a href="#precios">Precios</a>
+        <a href="mailto:marcosreciosanchez@gmail.com">Contacto</a>
+        <a href="privacy.html">Privacidad</a>
+      </div>
+    </div>
+    <div class="foot-note">Datos en reposo locales. La inferencia de IA se ejecuta bajo el proveedor que tú configures (Anthropic / Gemini / OpenAI) con su acuerdo de tratamiento. · Verifactu obligatorio: sociedades ene-2027, autónomos jul-2027. · Windows 10 22H2+ y Windows 11. macOS Q4-2026.</div>
+  </div>
+</footer>
+
+<script>
+  // ── Fondo "red neuronal" / constelaciones (mismo efecto que el inicio de la app) ──
+  (function(){
+    const canvas=document.getElementById('neural');
+    if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+    if(!ctx) return;
+    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let animId,nodes=[];
+    const MAX_DIST=160;
+
+    function resize(){
+      canvas.width=window.innerWidth;
+      canvas.height=window.innerHeight;
+    }
+    function build(){
+      // densidad proporcional al área (60 nodos a ~1440x900, igual que la app)
+      const count=Math.min(90,Math.max(36,Math.round(window.innerWidth*window.innerHeight/24000)));
+      nodes=Array.from({length:count},()=>({
+        x:Math.random()*window.innerWidth,
+        y:Math.random()*window.innerHeight,
+        vx:(Math.random()-0.5)*0.35,
+        vy:(Math.random()-0.5)*0.35,
+        r:Math.random()*2+1.5,
+        pulse:Math.random()*Math.PI*2
+      }));
+    }
+
+    function draw(){
+      const W=canvas.width,H=canvas.height;
+      ctx.clearRect(0,0,W,H);
+      for(const n of nodes){
+        n.x+=n.vx; n.y+=n.vy;
+        if(n.x<0||n.x>W) n.vx*=-1;
+        if(n.y<0||n.y>H) n.vy*=-1;
+        n.pulse+=0.012;
+      }
+      for(let i=0;i<nodes.length;i++){
+        for(let j=i+1;j<nodes.length;j++){
+          const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+          const dist=Math.sqrt(dx*dx+dy*dy);
+          if(dist<MAX_DIST){
+            const alpha=(1-dist/MAX_DIST)*0.18;
+            ctx.beginPath();
+            ctx.strokeStyle='rgba(99, 102, 241, '+alpha+')';
+            ctx.lineWidth=0.8;
+            ctx.moveTo(nodes[i].x,nodes[i].y);
+            ctx.lineTo(nodes[j].x,nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      for(const n of nodes){
+        const pulse=0.5+0.5*Math.sin(n.pulse);
+        const alpha=0.25+0.2*pulse;
+        const radius=n.r+pulse*0.8;
+        const grad=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,radius*3);
+        grad.addColorStop(0,'rgba(139, 92, 246, '+alpha+')');
+        grad.addColorStop(1,'rgba(99, 102, 241, 0)');
+        ctx.beginPath();
+        ctx.arc(n.x,n.y,radius*3,0,Math.PI*2);
+        ctx.fillStyle=grad; ctx.fill();
+        ctx.beginPath();
+        ctx.arc(n.x,n.y,radius,0,Math.PI*2);
+        ctx.fillStyle='rgba(165, 180, 252, '+(alpha+0.1)+')';
+        ctx.fill();
+      }
+      animId=requestAnimationFrame(draw);
+    }
+
+    resize(); build();
+    if(reduce){
+      // sin movimiento: pintamos un único frame estático
+      for(const n of nodes){n.vx=0;n.vy=0;}
+      draw(); cancelAnimationFrame(animId);
+    } else {
+      draw();
+    }
+    let rt;
+    window.addEventListener('resize',()=>{
+      clearTimeout(rt);
+      rt=setTimeout(()=>{resize();build();},150);
+    });
+  })();
+
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+  },{threshold:.12});
+  document.querySelectorAll('.reveal:not(.in)').forEach((el,i)=>{
+    el.style.transitionDelay=(i%4*80)+'ms';
+    io.observe(el);
+  });
+
+  // Lead capture → opens email client with prefilled body (no backend needed)
+  const form=document.getElementById('waitlist');
+  form.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    const nombre=document.getElementById('nombre').value.trim();
+    const email=document.getElementById('email').value.trim();
+    const empresas=document.getElementById('empresas').value;
+    const mensaje=document.getElementById('mensaje').value.trim();
+    if(!nombre||!email){return;}
+    const subject=encodeURIComponent('Acceso anticipado AutomatizaPyme — '+nombre);
+    const body=encodeURIComponent(
+      'Nombre: '+nombre+'\n'+
+      'Email: '+email+'\n'+
+      'Empresas que gestiona: '+empresas+'\n'+
+      'Mensaje: '+(mensaje||'(sin mensaje)')+'\n'
+    );
+    window.location.href='mailto:marcosreciosanchez@gmail.com?subject='+subject+'&body='+body;
+    document.getElementById('formOk').classList.add('show');
+  });
+</script>
+</body>
+</html>
