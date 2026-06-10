@@ -679,7 +679,6 @@
     if(!canvas) return;
     const ctx=canvas.getContext('2d');
     if(!ctx) return;
-    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let animId,nodes=[];
     const MAX_DIST=160;
 
@@ -743,13 +742,7 @@
     }
 
     resize(); build();
-    if(reduce){
-      // sin movimiento: pintamos un único frame estático
-      for(const n of nodes){n.vx=0;n.vy=0;}
-      draw(); cancelAnimationFrame(animId);
-    } else {
-      draw();
-    }
+    draw(); // animación siempre activa (ignora prefers-reduced-motion)
     let rt;
     window.addEventListener('resize',()=>{
       clearTimeout(rt);
